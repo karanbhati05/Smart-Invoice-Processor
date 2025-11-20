@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single Invoice - Smart Invoice Processor</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            
+            /* Light mode */
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+            --border: #e2e8f0;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --shadow-lg: rgba(0, 0, 0, 0.15);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-tertiary: #94a3b8;
+            --border: #334155;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow-lg: rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .navbar {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px var(--shadow);
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .logo img {
+            height: 112px;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .logo img:hover {
+            transform: scale(1.05);
+        }
+
+        [data-theme="dark"] .logo img {
+            filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.3)) brightness(1.1);
+        }
+
+        .logo span:last-child {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: var(--bg-tertiary);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .mobile-menu.active {
+            display: block;
+        }
+
+        .mobile-menu-content {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            background: var(--bg-secondary);
+            padding: 2rem 1.5rem;
+            box-shadow: -4px 0 12px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .mobile-menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .mobile-menu-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .mobile-menu-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .mobile-menu-items .btn {
+            width: 100%;
+            justify-content: flex-start;
+            gap: 0.75rem;
+        }
+
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 0.75rem;
+            z-index: 100;
+            box-shadow: 0 -2px 8px var(--shadow);
+        }
+
+        .bottom-nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bottom-nav-item:hover,
+        .bottom-nav-item.active {
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .bottom-nav-item .icon {
+            font-size: 1.5rem;
+        }
+
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 1.25rem;
+        }
+
+        .theme-toggle:hover {
+            background: var(--border);
+            transform: scale(1.05);
+        }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px var(--shadow);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 16px var(--shadow-lg);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .upload-zone {
+            border: 3px dashed var(--border);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--bg-tertiary);
+        }
+
+        .upload-zone:hover,
+        .upload-zone.dragover {
+            border-color: var(--primary);
+            background: var(--bg-secondary);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .upload-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .upload-hint {
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+        }
+
+        .invoice-preview {
+            display: none;
+        }
+
+        .invoice-preview.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .invoice-field {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .field-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-tertiary);
+            margin-bottom: 0.5rem;
+        }
+
+        .field-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 3rem auto;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            position: fixed;
+            top: 5rem;
+            right: 2rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px var(--shadow-lg);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            border: 1px solid var(--border);
+            max-width: 350px;
+        }
+
+        .alert.show {
+            transform: translateX(0);
+        }
+
+        .alert-success {
+            border-left: 4px solid var(--success);
+        }
+
+        .alert-error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .user-email {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .line-items {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .line-item {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border);
+        }
+
+        .line-item-desc {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .line-item-qty {
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+        }
+
+        .line-item-price {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.75rem 0;
+            }
+
+            .navbar-container {
+                padding: 0 1rem;
+            }
+
+            .logo {
+                font-size: 1rem;
+                gap: 0.5rem;
+            }
+
+            .logo img {
+                height: 36px !important;
+            }
+
+            .logo span:last-child {
+                font-size: 0.875rem;
+            }
+
+            .nav-actions > *:not(.mobile-menu-toggle):not(.theme-toggle) {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
+            .bottom-nav {
+                display: block;
+            }
+
+            .container {
+                padding: 1rem 1rem 5rem 1rem;
+            }
+
+            .card {
+                padding: 1.25rem;
+                border-radius: 16px;
+            }
+
+            .card-title {
+                font-size: 1.125rem;
+            }
+
+            .upload-zone {
+                padding: 2.5rem 1.5rem;
+                border-radius: 16px;
+            }
+
+            .upload-icon {
+                font-size: 3rem;
+            }
+
+            .upload-text {
+                font-size: 1rem;
+            }
+
+            .upload-hint {
+                font-size: 0.75rem;
+            }
+
+            .invoice-preview {
+                gap: 1rem;
+            }
+
+            .invoice-field {
+                padding: 0.875rem;
+            }
+
+            .field-label {
+                font-size: 0.75rem;
+            }
+
+            .field-value {
+                font-size: 0.9375rem;
+            }
+
+            .export-buttons {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .export-buttons .btn {
+                width: 100%;
+                justify-content: center;
+                padding: 0.875rem;
+            }
+
+            .alert {
+                right: 1rem;
+                left: 1rem;
+                max-width: none;
+                font-size: 0.875rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo span:last-child {
+                display: none;
+            }
+
+            .logo img {
+                height: 32px !important;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+
+            .upload-zone {
+                padding: 2rem 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            .navbar, .export-buttons, .btn-secondary { display: none !important; }
+            body { background: white; }
+            .card { box-shadow: none; border: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="logo">
+                <img src="/assets/logo.png" alt="Logo">
+                <span>Smart Invoice Processor</span>
+            </div>
+            <div class="nav-actions">
+                <div class="user-badge" id="user-info" style="display: none;">
+                    <div class="user-avatar" id="user-avatar">G</div>
+                    <span class="user-email" id="user-email"></span>
+                </div>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                    <span id="theme-icon">🌙</span>
+                </button>
+                <a href="/batch.html" class="btn btn-primary">📦 <span>Batch Mode</span></a>
+                <button class="btn btn-secondary" onclick="logout()">🚪 <span>Logout</span></button>
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobile-menu" onclick="closeMobileMenuOnBackdrop(event)">
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <h3 style="margin: 0; color: var(--text-primary);">Menu</h3>
+                <button class="mobile-menu-close" onclick="toggleMobileMenu()">×</button>
+            </div>
+            <div class="mobile-menu-items">
+                <div class="user-badge" id="mobile-user-info" style="display: none; margin-bottom: 1rem;">
+                    <div class="user-avatar" id="mobile-user-avatar">G</div>
+                    <span class="user-email" id="mobile-user-email" style="display: block !important;"></span>
+                </div>
+                <a href="/batch.html" class="btn btn-primary">📦 <span>Batch Mode</span></a>
+                <button class="btn btn-secondary" onclick="logout()">🚪 <span>Logout</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="bottom-nav-items">
+            <a href="/single.html" class="bottom-nav-item active">
+                <div class="icon">📝</div>
+                <div>Single</div>
+            </a>
+            <div class="bottom-nav-item" onclick="document.getElementById('file-input').click()">
+                <div class="icon">📄</div>
+                <div>Upload</div>
+            </div>
+            <a href="/batch.html" class="bottom-nav-item">
+                <div class="icon">📦</div>
+                <div>Batch</div>
+            </a>
+            <div class="bottom-nav-item" onclick="toggleTheme()">
+                <div class="icon" id="bottom-theme-icon">🌙</div>
+                <div>Theme</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert -->
+    <div id="alert" class="alert"></div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="grid">
+            <!-- Upload Section -->
+            <div class="card">
+                <h2 class="card-title">
+                    <span>📄</span>
+                    <span>Single Invoice Upload</span>
+                </h2>
+                <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text">Drop invoice here or click to browse</div>
+                    <div class="upload-hint">Supports PDF, JPG, PNG • Max 10MB</div>
+                    <input type="file" id="file-input" accept="image/*,application/pdf" onchange="handleFileSelect(event)" style="display: none;">
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h2 class="card-title" style="margin: 0;">
+                        <span>👁️</span>
+                        <span>Invoice Preview</span>
+                    </h2>
+                    <button class="btn btn-secondary" onclick="resetUpload()" style="display: none;" id="reset-btn">
+                        🔄 New Upload
+                    </button>
+                </div>
+
+                <div id="processing-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                    <p style="text-align: center; color: var(--text-tertiary); margin-top: 1rem;">Processing invoice...</p>
+                </div>
+
+                <div id="invoice-preview" class="invoice-preview">
+                    <div class="invoice-field">
+                        <div class="field-label">Invoice Number</div>
+                        <div class="field-value" id="inv-number">-</div>
+                    </div>
+
+                    <div class="invoice-field">
+                        <div class="field-label">Vendor</div>
+                        <div class="field-value" id="inv-vendor">-</div>
+                    </div>
+
+                    <div class="invoice-field">
+                        <div class="field-label">Date</div>
+                        <div class="field-value" id="inv-date">-</div>
+                    </div>
+
+                    <div class="invoice-field">
+                        <div class="field-label">Total Amount</div>
+                        <div class="field-value" id="inv-total" style="color: var(--primary); font-size: 1.5rem;">-</div>
+                    </div>
+
+                    <div class="invoice-field">
+                        <div class="field-label">Subtotal</div>
+                        <div class="field-value" id="inv-subtotal">-</div>
+                    </div>
+
+                    <div class="invoice-field">
+                        <div class="field-label">Tax</div>
+                        <div class="field-value" id="inv-tax">-</div>
+                    </div>
+
+                    <div id="line-items-section" style="display: none;">
+                        <div class="invoice-field">
+                            <div class="field-label">Line Items</div>
+                            <div class="line-items" id="line-items"></div>
+                        </div>
+                    </div>
+
+                    <div class="export-buttons">
+                        <button class="btn btn-primary" onclick="exportInvoice('json')">
+                            📥 Export JSON
+                        </button>
+                        <button class="btn btn-primary" onclick="exportInvoice('csv')">
+                            📊 Export CSV
+                        </button>
+                        <button class="btn btn-primary" onclick="emailInvoice()">
+                            📧 Email
+                        </button>
+                        <button class="btn btn-primary" onclick="printInvoice()">
+                            🖨️ Print
+                        </button>
+                    </div>
+                </div>
+
+                <div id="empty-state" style="text-align: center; padding: 3rem 1rem; color: var(--text-tertiary);">
+                    <div style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;">📋</div>
+                    <p style="font-size: 1.125rem;">Upload an invoice to see the preview</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v2';
+        let currentInvoiceData = null;
+        let currentInvoiceId = null;
+
+        // Theme Management
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            body.setAttribute('data-theme', newTheme);
+            const icon = newTheme === 'light' ? '🌙' : '☀️';
+            document.getElementById('theme-icon').textContent = icon;
+            const bottomIcon = document.getElementById('bottom-theme-icon');
+            if (bottomIcon) bottomIcon.textContent = icon;
+            localStorage.setItem('theme', newTheme);
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('active');
+        }
+
+        function closeMobileMenuOnBackdrop(event) {
+            if (event.target.id === 'mobile-menu') {
+                toggleMobileMenu();
+            }
+        }
+
+        // Load saved theme
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.body.setAttribute('data-theme', savedTheme);
+            const icon = savedTheme === 'light' ? '🌙' : '☀️';
+            document.getElementById('theme-icon').textContent = icon;
+            const bottomIcon = document.getElementById('bottom-theme-icon');
+            if (bottomIcon) bottomIcon.textContent = icon;
+
+            // Check for OAuth callback parameters in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            const email = urlParams.get('email');
+            const name = urlParams.get('name');
+
+            // If we have OAuth callback params, save them
+            if (token && email) {
+                localStorage.setItem('auth_token', token);
+                localStorage.setItem('user_email', email);
+                if (name) {
+                    localStorage.setItem('user_name', name);
+                }
+                // Clean URL by removing query params
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            // Load user info from localStorage
+            const storedEmail = localStorage.getItem('user_email');
+            const storedName = localStorage.getItem('user_name');
+
+            if (storedEmail) {
+                document.getElementById('user-info').style.display = 'flex';
+                document.getElementById('user-email').textContent = storedEmail;
+                document.getElementById('mobile-user-info').style.display = 'flex';
+                document.getElementById('mobile-user-email').textContent = storedEmail;
+                if (storedName) {
+                    const firstLetter = storedName.charAt(0).toUpperCase();
+                    document.getElementById('user-avatar').textContent = firstLetter;
+                    document.getElementById('mobile-user-avatar').textContent = firstLetter;
+                }
+            }
+
+            setupDragAndDrop();
+        });
+
+        function setupDragAndDrop() {
+            const zone = document.getElementById('upload-zone');
+            
+            if (!zone) return;
+            
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    processFile(files[0]);
+                }
+            });
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        async function processFile(file) {
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('processing-spinner').style.display = 'block';
+            document.getElementById('invoice-preview').classList.remove('active');
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('save', 'false');
+
+            try {
+                const response = await fetch(`${API_BASE}/process`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentInvoiceData = result.data;
+                    currentInvoiceId = null;
+                    displayInvoice(result.data);
+                    showAlert('✓ Invoice processed successfully!', 'success');
+                    document.getElementById('reset-btn').style.display = 'block';
+                } else {
+                    showAlert('Error: ' + (result.error || 'Processing failed'), 'error');
+                    resetUpload();
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+                resetUpload();
+            }
+        }
+
+        function displayInvoice(data) {
+            document.getElementById('processing-spinner').style.display = 'none';
+            document.getElementById('invoice-preview').classList.add('active');
+
+            document.getElementById('inv-number').textContent = data.invoice_number || 'N/A';
+            document.getElementById('inv-vendor').textContent = data.vendor || 'N/A';
+            document.getElementById('inv-date').textContent = data.date || 'N/A';
+            document.getElementById('inv-total').textContent = data.total || 'N/A';
+            document.getElementById('inv-subtotal').textContent = data.subtotal || 'N/A';
+            document.getElementById('inv-tax').textContent = data.tax || 'N/A';
+
+            if (data.line_items && data.line_items.length > 0) {
+                document.getElementById('line-items-section').style.display = 'block';
+                const lineItemsContainer = document.getElementById('line-items');
+                lineItemsContainer.innerHTML = data.line_items.map(item => `
+                    <div class="line-item">
+                        <div>
+                            <div class="line-item-desc">${item.description || 'Item'}</div>
+                            <div class="line-item-qty">Qty: ${item.quantity || 'N/A'}</div>
+                        </div>
+                        <div class="line-item-price">${item.price || 'N/A'}</div>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('line-items-section').style.display = 'none';
+            }
+        }
+
+        function exportInvoice(format) {
+            if (!currentInvoiceData) {
+                showAlert('No invoice to export. Please upload an invoice first.', 'error');
+                return;
+            }
+
+            try {
+                const data = format === 'json' ? 
+                    JSON.stringify(currentInvoiceData, null, 2) :
+                    convertToCSV(currentInvoiceData);
+
+                const blob = new Blob([data], { type: format === 'json' ? 'application/json' : 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `invoice_${currentInvoiceData.invoice_number || 'export'}.${format}`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                showAlert(`✓ Exported as ${format.toUpperCase()}`, 'success');
+            } catch (error) {
+                showAlert('Export failed: ' + error.message, 'error');
+            }
+        }
+
+        function convertToCSV(data) {
+            const headers = 'Invoice Number,Vendor,Date,Total,Subtotal,Tax\n';
+            const row = `"${data.invoice_number || ''}","${data.vendor || ''}","${data.date || ''}","${data.total || ''}","${data.subtotal || ''}","${data.tax || ''}"\n`;
+            return headers + row;
+        }
+
+        function printInvoice() {
+            if (!currentInvoiceData) {
+                showAlert('No invoice to print. Please upload an invoice first.', 'error');
+                return;
+            }
+            window.print();
+        }
+
+        async function emailInvoice() {
+            if (!currentInvoiceData) {
+                showAlert('No invoice to email. Please upload an invoice first.', 'error');
+                return;
+            }
+
+            // Check if user is logged in
+            let email = document.getElementById('user-email').textContent;
+            
+            // If no user email or guest, prompt for one
+            if (!email || email === 'Guest') {
+                email = prompt('Enter email address:');
+                if (!email) return;
+
+                if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                    showAlert('Please enter a valid email address.', 'error');
+                    return;
+                }
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/send-single-invoice`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        invoice_data: currentInvoiceData
+                    })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('✓ Invoice emailed successfully to ' + email, 'success');
+                } else {
+                    showAlert('Error: ' + (result.error || 'Failed to send email'), 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        }
+
+        function resetUpload() {
+            document.getElementById('invoice-preview').classList.remove('active');
+            document.getElementById('empty-state').style.display = 'block';
+            document.getElementById('processing-spinner').style.display = 'none';
+            document.getElementById('file-input').value = '';
+            document.getElementById('reset-btn').style.display = 'none';
+            currentInvoiceData = null;
+            currentInvoiceId = null;
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            setTimeout(() => alert.classList.add('show'), 100);
+            setTimeout(() => alert.classList.remove('show'), 4000);
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }
+    </script>
+</body>
+</html>

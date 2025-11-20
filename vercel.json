@@ -1,0 +1,67 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "public/login.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "public/single.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "public/batch.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "public/dashboard.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "public/index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "public/assets/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.py"
+    },
+    {
+      "src": "/login.html",
+      "dest": "/public/login.html"
+    },
+    {
+      "src": "/single.html",
+      "dest": "/public/single.html"
+    },
+    {
+      "src": "/batch.html",
+      "dest": "/public/batch.html"
+    },
+    {
+      "src": "/dashboard.html",
+      "dest": "/public/dashboard.html"
+    },
+    {
+      "src": "/index.html",
+      "dest": "/public/index.html"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/public/assets/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/public/login.html"
+    }
+  ]
+}

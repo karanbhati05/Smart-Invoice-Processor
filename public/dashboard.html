@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Processor Pro - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-right: 20px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 700;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .user-email {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+        }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .upload-zone {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        }
+
+        .upload-zone:hover {
+            border-color: #764ba2;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
+        .upload-zone.dragover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .invoice-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .invoice-item {
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .invoice-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            transform: translateX(5px);
+        }
+
+        .invoice-vendor {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .invoice-meta {
+            font-size: 13px;
+            color: #888;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-processed { background: #d4edda; color: #155724; }
+        .status-rejected { background: #f8d7da; color: #721c24; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            font-size: 30px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .detail-row {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .detail-value {
+            color: #333;
+            font-weight: 700;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: #888;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <div class="logo">🤖 Invoice Processor Pro</div>
+            <div style="display: flex; align-items: center;">
+                <div class="user-info" id="user-info">
+                    <div class="user-avatar" id="user-avatar">G</div>
+                    <div class="user-details">
+                        <div class="user-name" id="user-name">Guest User</div>
+                        <div class="user-email" id="user-email">guest@example.com</div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="showExportModal()">📥 Export</button>
+                    <button class="btn btn-secondary" onclick="showAnalytics()">📊 Analytics</button>
+                    <button class="btn btn-secondary" id="email-report-btn" onclick="sendEmailReport()" style="display:none;">📧 Email Report</button>
+                    <button class="btn btn-secondary" onclick="clearDatabase()" style="background: #f8d7da; color: #721c24;">🗑️ Clear Data</button>
+                    <button class="btn btn-secondary" onclick="logout()">🚪 Logout</button>
+                    <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Invoices</div>
+                <div class="stat-value" id="stat-total">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Processed</div>
+                <div class="stat-value" id="stat-processed">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">📄 Single Uploads</div>
+                <div class="stat-value" id="stat-amount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">📦 Batch Uploads</div>
+                <div class="stat-value" id="stat-month">0</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="section">
+                <div class="section-title">Process New Invoice</div>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('single')">Single Invoice</button>
+                    <button class="tab" onclick="switchTab('batch')">Batch Upload</button>
+                </div>
+
+                <div id="single-tab" class="tab-content active">
+                    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+                        <div class="upload-icon">📄</div>
+                        <div class="upload-text">Click or drag to upload</div>
+                        <div class="upload-hint">Supports PNG, JPG, PDF (Max 10MB)</div>
+                    </div>
+                    <input type="file" id="file-input" accept="image/*,.pdf" style="display:none" onchange="previewSingleFile(this.files)">
+                    
+                    <div id="single-preview" style="margin-top: 20px; display: none;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                            <strong id="single-filename" style="color: #333;"></strong>
+                            <span id="single-filesize" style="color: #888; margin-left: 10px;"></span>
+                        </div>
+                                        <button class="btn btn-primary" onclick="processSingleInvoice()" style="width: 100%; margin-top: 15px;">🚀 Process Invoice</button>
+            </div>
+
+            <!-- Sticky Process Button -->
+            <div id="sticky-process-btn" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: none;">
+                <button class="btn btn-primary" onclick="processSingleInvoice()" style="padding: 15px 30px; font-size: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                    🚀 Process Invoice
+                </button>
+                    </div>
+                </div>
+
+                <div id="batch-tab" class="tab-content">
+                    <div class="upload-zone" onclick="document.getElementById('batch-input').click()">
+                        <div class="upload-icon">📦</div>
+                        <div class="upload-text">Upload multiple invoices</div>
+                        <div class="upload-hint">Select multiple files at once</div>
+                    </div>
+                    <input type="file" id="batch-input" multiple accept="image/*,.pdf" style="display:none" onchange="previewBatchFiles(this.files)">
+                    
+                    <div id="batch-preview" style="margin-top: 20px; display: none;">
+                        <h3 style="color: #333; margin-bottom: 15px;">Selected Files (<span id="batch-count">0</span>)</h3>
+                        <div id="batch-preview-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;"></div>
+                        <button class="btn btn-primary" onclick="processBatchInvoices()" style="width: 100%;">🚀 Process All Invoices</button>
+                    </div>
+                    
+                    <div id="batch-results" style="margin-top: 20px; display: none;">
+                        <h3 style="color: #333; margin-bottom: 15px;">Batch Processing Results</h3>
+                        <div id="batch-results-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    Recent Invoices
+                    <div style="float: right; display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="filterInvoices('all')" id="filter-all" style="padding: 8px 16px; font-size: 13px; background: #667eea; color: white;">All</button>
+                        <button class="btn btn-secondary" onclick="filterInvoices('single')" id="filter-single" style="padding: 8px 16px; font-size: 13px;">📄 Single</button>
+                        <button class="btn btn-secondary" onclick="filterInvoices('batch')" id="filter-batch" style="padding: 8px 16px; font-size: 13px;">📦 Batch</button>
+                    </div>
+                </div>
+                <div class="invoice-list" id="invoice-list">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Detail Modal -->
+    <div id="invoice-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Invoice Details</div>
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="invoice-details"></div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Export Invoices</div>
+                <span class="close-btn" onclick="closeExportModal()">&times;</span>
+            </div>
+            <div>
+                <p style="margin-bottom: 20px; color: #666;">Choose export format:</p>
+                <button class="btn btn-primary" onclick="exportData('json')" style="width: 100%; margin-bottom: 10px;">📄 JSON</button>
+                <button class="btn btn-primary" onclick="exportData('csv')" style="width: 100%; margin-bottom: 10px;">📊 CSV</button>
+                <button class="btn btn-primary" onclick="exportData('pdf')" style="width: 100%;">📑 PDF Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Modal -->
+    <div id="analytics-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <div class="modal-title">📊 Analytics Dashboard</div>
+                <span class="close-btn" onclick="closeAnalyticsModal()">&times;</span>
+            </div>
+            <div id="analytics-content">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login/Register Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <div class="modal-title" id="auth-modal-title">🔐 Login</div>
+                <span class="close-btn" onclick="closeLoginModal()">&times;</span>
+            </div>
+            <div id="login-form">
+                <input type="email" id="login-email" placeholder="Email" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                <input type="password" id="login-password" placeholder="Password" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                <div id="register-fields" style="display: none;">
+                    <input type="text" id="register-name" placeholder="Full Name (optional)" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                    <input type="text" id="register-company" placeholder="Company (optional)" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                </div>
+                <button class="btn btn-primary" id="auth-submit-btn" onclick="handleAuth()" style="width: 100%; margin-bottom: 10px;">Login</button>
+                <button class="btn btn-secondary" id="auth-toggle-btn" onclick="toggleAuthMode()" style="width: 100%;">Don't have an account? Register</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v2';
+        let currentInvoices = [];
+        let currentFilter = 'all';
+        let authToken = localStorage.getItem('auth_token');
+        let currentUser = null;
+        let isRegisterMode = false;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            // Update user info in header
+            updateUserInfo();
+            checkAuth();
+            loadInvoices();
+            loadStats();
+            setupDragAndDrop();
+        });
+
+        function updateUserInfo() {
+            const email = localStorage.getItem('user_email') || 'guest@example.com';
+            const name = localStorage.getItem('user_name') || 'Guest User';
+            const guestMode = localStorage.getItem('guest_mode');
+            
+            document.getElementById('user-email').textContent = email;
+            document.getElementById('user-name').textContent = name;
+            
+            // Set avatar to first letter of name
+            const firstLetter = name.charAt(0).toUpperCase();
+            document.getElementById('user-avatar').textContent = firstLetter;
+            
+            // Show email report button if logged in (not guest) AND has valid email
+            const hasValidEmail = email && email !== 'guest@example.com' && email.includes('@');
+            if (authToken && !guestMode && hasValidEmail) {
+                document.getElementById('email-report-btn').style.display = 'inline-block';
+            }
+        }
+
+        // Drag and drop
+        function setupDragAndDrop() {
+            const zone = document.getElementById('upload-zone');
+            
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                previewSingleFile(e.dataTransfer.files);
+            });
+            
+            // Show/hide sticky process button based on scroll
+            let processButton = document.querySelector('#single-tab button.btn-primary');
+            let stickyButton = document.getElementById('sticky-process-btn');
+            
+            window.addEventListener('scroll', () => {
+                if (processButton && stickyButton) {
+                    const rect = processButton.getBoundingClientRect();
+                    const isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
+                    stickyButton.style.display = isVisible ? 'none' : 'block';
+                }
+            });
+        }
+
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').classList.add('active');
+            
+            // Reset previews when switching tabs
+            document.getElementById('single-preview').style.display = 'none';
+            document.getElementById('batch-preview').style.display = 'none';
+            document.getElementById('batch-results').style.display = 'none';
+        }
+
+        // File preview and processing
+        let selectedSingleFile = null;
+        let selectedBatchFiles = null;
+
+        function previewSingleFile(files) {
+            if (!files || files.length === 0) return;
+            
+            selectedSingleFile = files[0];
+            const preview = document.getElementById('single-preview');
+            const filename = document.getElementById('single-filename');
+            const filesize = document.getElementById('single-filesize');
+            
+            filename.textContent = selectedSingleFile.name;
+            filesize.textContent = `(${(selectedSingleFile.size / 1024).toFixed(2)} KB)`;
+            preview.style.display = 'block';
+        }
+
+        async function processSingleInvoice() {
+            if (!selectedSingleFile) return;
+            
+            const formData = new FormData();
+            formData.append('file', selectedSingleFile);
+            
+            showAlert('Processing invoice...', 'success');
+            
+            try {
+                const response = await fetch(`${API_BASE}/process`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Invoice processed successfully! 🎉', 'success');
+                    loadInvoices();
+                    loadStats();
+                    
+                    // Reset
+                    selectedSingleFile = null;
+                    document.getElementById('single-preview').style.display = 'none';
+                    document.getElementById('file-input').value = '';
+                } else {
+                    showAlert('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Error processing invoice: ' + error.message, 'error');
+            }
+        }
+
+        function previewBatchFiles(files) {
+            if (!files || files.length === 0) return;
+            
+            selectedBatchFiles = Array.from(files);
+            const preview = document.getElementById('batch-preview');
+            const previewList = document.getElementById('batch-preview-list');
+            const count = document.getElementById('batch-count');
+            
+            count.textContent = selectedBatchFiles.length;
+            
+            previewList.innerHTML = selectedBatchFiles.map((file, i) => `
+                <div style="background: #f8f9fa; padding: 10px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color: #333;">${file.name}</strong>
+                        <span style="color: #888; margin-left: 10px; font-size: 12px;">${(file.size / 1024).toFixed(2)} KB</span>
+                    </div>
+                    <span style="color: #667eea; font-weight: 600;">${i + 1}</span>
+                </div>
+            `).join('');
+            
+            preview.style.display = 'block';
+            document.getElementById('batch-results').style.display = 'none';
+        }
+
+        async function processBatchInvoices() {
+            if (!selectedBatchFiles || selectedBatchFiles.length === 0) return;
+            
+            const formData = new FormData();
+            selectedBatchFiles.forEach(file => {
+                formData.append('files', file);
+            });
+            
+            showAlert(`Processing ${selectedBatchFiles.length} invoices...`, 'success');
+            
+            try {
+                const response = await fetch(`${API_BASE}/batch`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success && result.batch_result) {
+                    const { successful, failed, results } = result.batch_result;
+                    showAlert(`Batch complete: ${successful} successful, ${failed} failed`, 'success');
+                    displayBatchResults(results);
+                    loadInvoices();
+                    loadStats();
+                    
+                    // Reset
+                    selectedBatchFiles = null;
+                    document.getElementById('batch-preview').style.display = 'none';
+                    document.getElementById('batch-input').value = '';
+                } else {
+                    showAlert('Error: ' + (result.error || 'Batch processing failed'), 'error');
+                }
+            } catch (error) {
+                showAlert('Error processing batch: ' + error.message, 'error');
+            }
+        }
+
+        function displayBatchResults(results) {
+            const container = document.getElementById('batch-results');
+            const content = document.getElementById('batch-results-content');
+            
+            if (!results || results.length === 0) {
+                content.innerHTML = '<p style="color: #888;">No results to display</p>';
+                container.style.display = 'block';
+                return;
+            }
+            
+            content.innerHTML = results.map((r, i) => {
+                const isSuccess = r.success && r.data && !r.data.error;
+                const invoiceNumber = r.invoice?.invoice_number || r.data?.invoice_number || 'N/A';
+                const errorMsg = r.error || r.data?.error || 'Unknown error';
+                
+                return `
+                <div style="background: ${isSuccess ? '#d4edda' : '#f8d7da'}; padding: 15px; margin-bottom: 10px; border-radius: 8px; cursor: ${isSuccess && r.invoice_id ? 'pointer' : 'default'};" ${isSuccess && r.invoice_id ? `onclick="showInvoiceDetails(${r.invoice_id})"` : ''}>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="color: #333;">${r.filename}</strong>
+                            ${isSuccess ? 
+                                `<div style="color: #155724; font-size: 13px; margin-top: 5px;">✓ Processed - Invoice #${invoiceNumber}</div>` : 
+                                `<div style="color: #721c24; font-size: 13px; margin-top: 5px;">✗ Failed: ${errorMsg}</div>`
+                            }
+                        </div>
+                        <div style="font-size: 24px;">${isSuccess ? '✓' : '✗'}</div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+            
+            container.style.display = 'block';
+        }
+
+        // Load invoices
+        async function loadInvoices() {
+            try {
+                const response = await fetch(`${API_BASE}/invoices?limit=100`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentInvoices = result.invoices || [];
+                    filterInvoices(currentFilter);
+                } else {
+                    currentInvoices = [];
+                    displayInvoices([]);
+                }
+            } catch (error) {
+                console.error('Error loading invoices:', error);
+                currentInvoices = [];
+                displayInvoices([]);
+            }
+        }
+
+        function filterInvoices(type) {
+            currentFilter = type;
+            
+            // Update button styles
+            document.getElementById('filter-all').style.background = type === 'all' ? '#667eea' : '#6c757d';
+            document.getElementById('filter-all').style.color = 'white';
+            document.getElementById('filter-single').style.background = type === 'single' ? '#1976d2' : '#6c757d';
+            document.getElementById('filter-single').style.color = 'white';
+            document.getElementById('filter-batch').style.background = type === 'batch' ? '#f57c00' : '#6c757d';
+            document.getElementById('filter-batch').style.color = 'white';
+            
+            // Filter invoices
+            let filtered = currentInvoices;
+            if (type !== 'all') {
+                filtered = currentInvoices.filter(inv => inv.upload_type === type);
+            }
+            
+            displayInvoices(filtered);
+        }
+
+        function displayInvoices(invoices) {
+            const list = document.getElementById('invoice-list');
+            
+            if (!invoices || invoices.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#888;">No invoices yet</p>';
+                return;
+            }
+            
+            list.innerHTML = invoices.map(inv => `
+                <div class="invoice-item" onclick="showInvoiceDetails(${inv.id})">
+                    <div class="invoice-vendor">${inv.vendor || 'Unknown Vendor'}</div>
+                    <div class="invoice-meta">
+                        <span>${inv.total || 'N/A'}</span>
+                        <span class="status-badge status-${inv.status}">${inv.status}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/analytics`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const analytics = result.analytics;
+                    const uploadBreakdown = analytics.upload_breakdown || {};
+                    
+                    document.getElementById('stat-total').textContent = analytics.total_invoices;
+                    document.getElementById('stat-processed').textContent = analytics.status_breakdown.processed || analytics.total_invoices || 0;
+                    
+                    // Update with single/batch counts
+                    const singleCount = uploadBreakdown.single || 0;
+                    const batchCount = uploadBreakdown.batch || 0;
+                    document.getElementById('stat-amount').textContent = singleCount;
+                    document.getElementById('stat-month').textContent = batchCount;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Show invoice details
+        async function showInvoiceDetails(id) {
+            try {
+                const response = await fetch(`${API_BASE}/invoices/${id}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const inv = result.invoice;
+                    const details = document.getElementById('invoice-details');
+                    
+                    details.innerHTML = `
+                        <div class="detail-row">
+                            <span class="detail-label">Invoice Number</span>
+                            <span class="detail-value">${inv.invoice_number || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Vendor</span>
+                            <span class="detail-value">${inv.vendor || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Date</span>
+                            <span class="detail-value">${inv.date || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Subtotal</span>
+                            <span class="detail-value">${inv.subtotal || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Tax</span>
+                            <span class="detail-value">${inv.tax || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Total</span>
+                            <span class="detail-value">${inv.total || 'N/A'}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Status</span>
+                            <span class="status-badge status-${inv.status}">${inv.status}</span>
+                        </div>
+                    `;
+                    
+                    document.getElementById('invoice-modal').classList.add('show');
+                }
+            } catch (error) {
+                showAlert('Error loading invoice: ' + error.message, 'error');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('invoice-modal').classList.remove('show');
+        }
+
+        // Export
+        function showExportModal() {
+            document.getElementById('export-modal').classList.add('show');
+        }
+
+        function closeExportModal() {
+            document.getElementById('export-modal').classList.remove('show');
+        }
+
+        async function exportData(format) {
+            try {
+                // Check if we have invoices first
+                const checkResponse = await fetch(`${API_BASE}/invoices?limit=1`);
+                const checkResult = await checkResponse.json();
+                
+                if (!checkResult.success || !checkResult.invoices || checkResult.invoices.length === 0) {
+                    showAlert('No invoices to export. Please upload and process some invoices first.', 'error');
+                    closeExportModal();
+                    return;
+                }
+                
+                // Proceed with export
+                window.open(`${API_BASE}/export?format=${format}`, '_blank');
+                closeExportModal();
+                showAlert(`Exporting invoices as ${format.toUpperCase()}...`, 'success');
+            } catch (error) {
+                showAlert('Error checking invoices: ' + error.message, 'error');
+                closeExportModal();
+            }
+        }
+
+        // Utilities
+        function refreshData() {
+            loadInvoices();
+            loadStats();
+            showAlert('Data refreshed', 'success');
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 3000);
+        }
+
+        async function clearDatabase() {
+            if (!confirm('⚠️ Are you sure you want to clear ALL invoice data? This cannot be undone!')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/reset-database`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Database cleared successfully!', 'success');
+                    loadInvoices();
+                    loadStats();
+                } else {
+                    showAlert('Error: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Error clearing database: ' + error.message, 'error');
+            }
+        }
+
+        async function showAnalytics() {
+            const modal = document.getElementById('analytics-modal');
+            const content = document.getElementById('analytics-content');
+            modal.classList.add('show');
+            
+            try {
+                const response = await fetch(`${API_BASE}/analytics`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const a = result.analytics;
+                    const uploadBreakdown = a.upload_breakdown || {};
+                    const singleCount = uploadBreakdown.single || 0;
+                    const batchCount = uploadBreakdown.batch || 0;
+                    
+                    content.innerHTML = `
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center;">
+                                <div style="font-size: 32px; font-weight: 800; color: #667eea;">${a.total_invoices}</div>
+                                <div style="color: #666; margin-top: 5px;">Total Invoices</div>
+                            </div>
+                            <div style="background: #e3f2fd; padding: 20px; border-radius: 10px; text-align: center;">
+                                <div style="font-size: 32px; font-weight: 800; color: #1976d2;">${singleCount}</div>
+                                <div style="color: #666; margin-top: 5px;">Single Upload</div>
+                            </div>
+                            <div style="background: #fff3e0; padding: 20px; border-radius: 10px; text-align: center;">
+                                <div style="font-size: 32px; font-weight: 800; color: #f57c00;">${batchCount}</div>
+                                <div style="color: #666; margin-top: 5px;">Batch Upload</div>
+                            </div>
+                            <div style="background: #d4edda; padding: 20px; border-radius: 10px; text-align: center;">
+                                <div style="font-size: 32px; font-weight: 800; color: #155724;">${a.status_breakdown.processed || a.total_invoices || 0}</div>
+                                <div style="color: #666; margin-top: 5px;">Processed</div>
+                            </div>
+                        </div>
+                        
+                        <h3 style="margin-bottom: 15px; color: #333;">Top Vendors</h3>
+                        <div style="margin-bottom: 30px;">
+                            ${a.top_vendors.map(v => `
+                                <div style="display: flex; justify-content: space-between; padding: 10px; background: #f8f9fa; margin-bottom: 8px; border-radius: 6px;">
+                                    <span style="font-weight: 600;">${v.vendor}</span>
+                                    <span style="color: #667eea; font-weight: 700;">${v.count} invoices</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <h3 style="margin-bottom: 15px; color: #333;">Recent Activity</h3>
+                        <div>
+                            ${a.recent_invoices.slice(0, 5).map(inv => `
+                                <div style="display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; cursor: pointer;" onclick="closeAnalyticsModal(); showInvoiceDetails(${inv.id});">
+                                    <div>
+                                        <div style="font-weight: 600; color: #333;">${inv.vendor || 'Unknown'}</div>
+                                        <div style="font-size: 12px; color: #888; margin-top: 3px;">
+                                            ${inv.date || 'N/A'} • 
+                                            <span style="color: ${inv.upload_type === 'batch' ? '#f57c00' : '#1976d2'}; font-weight: 600;">
+                                                ${inv.upload_type === 'batch' ? '📦 Batch' : '📄 Single'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-weight: 700; color: #333;">${inv.total || 'N/A'}</div>
+                                        <span class="status-badge status-${inv.status}">${inv.status}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    content.innerHTML = '<p style="color: #721c24;">Error loading analytics</p>';
+                }
+            } catch (error) {
+                content.innerHTML = '<p style="color: #721c24;">Error: ' + error.message + '</p>';
+            }
+        }
+        
+        function closeAnalyticsModal() {
+            document.getElementById('analytics-modal').classList.remove('show');
+        }
+
+        // ============================================================================
+        // AUTHENTICATION FUNCTIONS
+        // ============================================================================
+
+        // Check authentication on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check for OAuth callback parameters in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlToken = urlParams.get('token');
+            const urlEmail = urlParams.get('email');
+            const urlName = urlParams.get('name');
+            
+            if (urlToken) {
+                // OAuth callback - store token and user info
+                localStorage.setItem('auth_token', urlToken);
+                if (urlEmail) localStorage.setItem('user_email', urlEmail);
+                if (urlName) localStorage.setItem('user_name', urlName);
+                
+                // Clean up URL by removing parameters
+                window.history.replaceState({}, document.title, '/dashboard.html');
+                
+                authToken = urlToken;
+                
+                // Update UI with OAuth user info
+                updateUserInfo();
+                
+                checkAuth();
+                loadInvoices();
+                return;
+            }
+            
+            const token = localStorage.getItem('auth_token');
+            const guestMode = localStorage.getItem('guest_mode');
+            
+            if (!token && !guestMode) {
+                // Redirect to login page if not authenticated
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            if (token) {
+                authToken = token;
+                checkAuth();
+            }
+            
+            loadInvoices();
+        });
+
+        function checkAuth() {
+            if (authToken) {
+                // For OAuth users, use stored email/name if available
+                const storedEmail = localStorage.getItem('user_email');
+                const storedName = localStorage.getItem('user_name');
+                
+                if (storedEmail) {
+                    // OAuth user - create a basic user object
+                    currentUser = {
+                        email: storedEmail,
+                        full_name: storedName || storedEmail.split('@')[0]
+                    };
+                    updateAuthUI(true);
+                    return;
+                }
+                
+                // Try to verify token by fetching user profile
+                fetch(`${API_BASE}/user/profile`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        currentUser = data.user;
+                        updateAuthUI(true);
+                    } else {
+                        // Don't logout on profile fetch failure for OAuth users
+                        // Just update UI with limited info
+                        updateAuthUI(true);
+                    }
+                })
+                .catch(() => {
+                    // Don't logout on network error
+                    // Just update UI with limited info
+                    updateAuthUI(true);
+                });
+            }
+        }
+
+        function updateAuthUI(loggedIn) {
+            document.getElementById('login-btn').style.display = loggedIn ? 'none' : 'inline-block';
+            document.getElementById('logout-btn').style.display = loggedIn ? 'inline-block' : 'none';
+            document.getElementById('email-report-btn').style.display = loggedIn ? 'inline-block' : 'none';
+        }
+
+        function showLoginModal() {
+            document.getElementById('login-modal').classList.add('show');
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.remove('show');
+        }
+
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            const title = document.getElementById('auth-modal-title');
+            const submitBtn = document.getElementById('auth-submit-btn');
+            const toggleBtn = document.getElementById('auth-toggle-btn');
+            const registerFields = document.getElementById('register-fields');
+
+            if (isRegisterMode) {
+                title.textContent = '📝 Register';
+                submitBtn.textContent = 'Create Account';
+                toggleBtn.textContent = 'Already have an account? Login';
+                registerFields.style.display = 'block';
+            } else {
+                title.textContent = '🔐 Login';
+                submitBtn.textContent = 'Login';
+                toggleBtn.textContent = "Don't have an account? Register";
+                registerFields.style.display = 'none';
+            }
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                showAlert('Please enter email and password', 'error');
+                return;
+            }
+
+            const endpoint = isRegisterMode ? '/register' : '/login';
+            const payload = { email, password };
+
+            if (isRegisterMode) {
+                payload.full_name = document.getElementById('register-name').value;
+                payload.company = document.getElementById('register-company').value;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    authToken = result.token;
+                    localStorage.setItem('auth_token', authToken);
+                    currentUser = result;
+                    updateAuthUI(true);
+                    closeLoginModal();
+                    showAlert(isRegisterMode ? 'Account created! Check your email to verify.' : 'Login successful!', 'success');
+                    
+                    // Clear form
+                    document.getElementById('login-email').value = '';
+                    document.getElementById('login-password').value = '';
+                    document.getElementById('register-name').value = '';
+                    document.getElementById('register-company').value = '';
+                } else {
+                    showAlert(result.error || 'Authentication failed', 'error');
+                }
+            } catch (error) {
+                showAlert('Error: ' + error.message, 'error');
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('guest_mode');
+            localStorage.removeItem('user_email');
+            localStorage.removeItem('user_name');
+            window.location.href = '/login.html';
+        }
+
+        async function sendEmailReport() {
+            if (!authToken) {
+                showAlert('Please login to send email reports', 'error');
+                return;
+            }
+
+            const userEmail = localStorage.getItem('user_email');
+            if (!userEmail || userEmail === 'guest@example.com') {
+                showAlert('Please login with a valid email to receive reports', 'error');
+                return;
+            }
+
+            showAlert('📧 Preparing your invoice report...', 'info');
+
+            try {
+                const response = await fetch(`${API_BASE}/send-report`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email: userEmail })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert(`✅ Invoice report sent to ${userEmail}!`, 'success');
+                } else {
+                    const errorMsg = result.error || 'Failed to send report';
+                    if (errorMsg.includes('Email not configured')) {
+                        showAlert('📧 Email service not configured. Contact administrator to enable email reports.', 'error');
+                    } else {
+                        showAlert(errorMsg, 'error');
+                    }
+                }
+            } catch (error) {
+                showAlert('Error sending report: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

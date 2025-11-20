@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single Invoice Processor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .upload-zone {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .upload-zone:hover {
+            background: #e9ecef;
+            border-color: #764ba2;
+        }
+
+        .upload-zone.dragover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .preview-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .invoice-preview {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .invoice-field {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .invoice-field:last-child {
+            border-bottom: none;
+        }
+
+        .field-label {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .field-value {
+            font-size: 18px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #dee2e6;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .line-items {
+            margin-top: 15px;
+        }
+
+        .line-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>📄 Single Invoice Processor</h1>
+                <p style="color: #888; margin-top: 5px;">Upload and process one invoice at a time</p>
+            </div>
+            <div class="header-buttons">
+                <div class="user-info" id="user-info" style="display: none;">
+                    <div class="user-avatar" id="user-avatar">G</div>
+                    <span id="user-email" style="color: #666;"></span>
+                </div>
+                <a href="/batch.html" class="btn btn-secondary">📦 Batch Processing</a>
+                <button class="btn btn-secondary" onclick="logout()">🚪 Logout</button>
+            </div>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <div class="card">
+            <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+                <div class="upload-icon">📄</div>
+                <h2 style="color: #333; margin-bottom: 10px;">Drop Invoice Here or Click to Upload</h2>
+                <p style="color: #888;">Supports PDF, JPG, PNG (Max 10MB)</p>
+                <input type="file" id="file-input" accept="image/*,application/pdf" onchange="handleFileSelect(event)">
+            </div>
+
+            <div id="preview-section" class="preview-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="color: #333;">Processing...</h2>
+                    <button class="btn btn-secondary" onclick="resetUpload()">🔄 Upload Another</button>
+                </div>
+                <div id="processing-spinner" class="spinner"></div>
+                
+                <div id="invoice-preview" class="invoice-preview" style="display: none;">
+                    <h3 style="color: #667eea; margin-bottom: 20px;">Invoice Details</h3>
+                    
+                    <div class="invoice-field">
+                        <div class="field-label">Invoice Number</div>
+                        <div class="field-value" id="inv-number">-</div>
+                    </div>
+
+                    <div class="invoice-field">
+                        <div class="field-label">Vendor</div>
+                        <div class="field-value" id="inv-vendor">-</div>
+                    </div>
+
+                    <div class="invoice-field">
+                        <div class="field-label">Date</div>
+                        <div class="field-value" id="inv-date">-</div>
+                    </div>
+
+                    <div class="invoice-field">
+                        <div class="field-label">Total Amount</div>
+                        <div class="field-value" id="inv-total" style="color: #667eea; font-size: 32px;">-</div>
+                    </div>
+
+                    <div class="invoice-field">
+                        <div class="field-label">Subtotal</div>
+                        <div class="field-value" id="inv-subtotal">-</div>
+                    </div>
+
+                    <div class="invoice-field">
+                        <div class="field-label">Tax</div>
+                        <div class="field-value" id="inv-tax">-</div>
+                    </div>
+
+                    <div class="invoice-field" id="line-items-section" style="display: none;">
+                        <div class="field-label">Line Items</div>
+                        <div class="line-items" id="line-items"></div>
+                    </div>
+
+                    <div class="export-buttons">
+                        <button class="btn btn-primary" onclick="exportInvoice('json')">📥 Export JSON</button>
+                        <button class="btn btn-primary" onclick="exportInvoice('csv')">📥 Export CSV</button>
+                        <button class="btn btn-primary" onclick="printInvoice()">🖨️ Print</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('Single page script loaded');
+        const API_BASE = '/api/v2';
+        let currentInvoiceData = null;
+        let currentInvoiceId = null;
+
+        // Check authentication
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM Content Loaded');
+            const token = localStorage.getItem('auth_token');
+            const email = localStorage.getItem('user_email');
+            const name = localStorage.getItem('user_name');
+
+            if (email) {
+                document.getElementById('user-info').style.display = 'flex';
+                document.getElementById('user-email').textContent = email;
+                if (name) {
+                    document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
+                }
+            }
+
+            setupDragAndDrop();
+            console.log('Setup complete');
+        });
+
+        function setupDragAndDrop() {
+            console.log('Setting up drag and drop');
+            const zone = document.getElementById('upload-zone');
+            
+            if (!zone) {
+                console.error('Upload zone not found!');
+                return;
+            }
+            
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                console.log('Files dropped:', files.length);
+                if (files.length > 0) {
+                    processFile(files[0]);
+                }
+            });
+        }
+
+        function handleFileSelect(event) {
+            console.log('File selected via input');
+            const file = event.target.files[0];
+            if (file) {
+                console.log('File to process:', file.name, file.size, 'bytes');
+                processFile(file);
+            }
+        }
+
+        async function processFile(file) {
+            console.log('Processing file:', file.name);
+            document.getElementById('preview-section').style.display = 'block';
+            document.getElementById('processing-spinner').style.display = 'block';
+            document.getElementById('invoice-preview').style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('save', 'false');  // NEVER save to database from single page
+
+            try {
+                const response = await fetch(`${API_BASE}/process`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                console.log('API Response:', result);
+
+                if (result.success) {
+                    currentInvoiceData = result.data;
+                    currentInvoiceId = null;  // No ID since not saved
+                    console.log('Invoice data:', currentInvoiceData);
+                    displayInvoice(result.data);
+                    showAlert('✓ Invoice processed successfully!', 'success');
+                } else {
+                    console.error('Processing failed:', result.error);
+                    showAlert('Error: ' + (result.error || 'Processing failed'), 'error');
+                    resetUpload();
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                showAlert('Error: ' + error.message, 'error');
+                resetUpload();
+            }
+        }
+
+        function displayInvoice(data) {
+            console.log('Displaying invoice:', data);
+            document.getElementById('processing-spinner').style.display = 'none';
+            document.getElementById('invoice-preview').style.display = 'block';
+
+            document.getElementById('inv-number').textContent = data.invoice_number || 'N/A';
+            document.getElementById('inv-vendor').textContent = data.vendor || 'N/A';
+            document.getElementById('inv-date').textContent = data.date || 'N/A';
+            document.getElementById('inv-total').textContent = data.total || 'N/A';
+            document.getElementById('inv-subtotal').textContent = data.subtotal || 'N/A';
+            document.getElementById('inv-tax').textContent = data.tax || 'N/A';
+
+            // Line items
+            if (data.line_items && data.line_items.length > 0) {
+                document.getElementById('line-items-section').style.display = 'block';
+                const lineItemsContainer = document.getElementById('line-items');
+                lineItemsContainer.innerHTML = data.line_items.map(item => `
+                    <div class="line-item">
+                        <div>
+                            <strong>${item.description || 'Item'}</strong><br>
+                            <small style="color: #888;">Qty: ${item.quantity || 'N/A'}</small>
+                        </div>
+                        <div style="font-weight: 600; color: #667eea;">${item.price || 'N/A'}</div>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('line-items-section').style.display = 'none';
+            }
+        }
+
+        function exportInvoice(format) {
+            console.log('Export requested:', format, 'Data available:', !!currentInvoiceData);
+            
+            if (!currentInvoiceData) {
+                console.error('No invoice data available for export');
+                showAlert('No invoice to export. Please upload an invoice first.', 'error');
+                return;
+            }
+
+            try {
+                const data = format === 'json' ? 
+                    JSON.stringify(currentInvoiceData, null, 2) :
+                    convertToCSV(currentInvoiceData);
+
+                const blob = new Blob([data], { type: format === 'json' ? 'application/json' : 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `invoice_${currentInvoiceData.invoice_number || 'export'}.${format}`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                showAlert(`✓ Exported as ${format.toUpperCase()}`, 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                showAlert('Export failed: ' + error.message, 'error');
+            }
+        }
+
+        function convertToCSV(data) {
+            const headers = 'Invoice Number,Vendor,Date,Total,Subtotal,Tax\n';
+            const row = `"${data.invoice_number || ''}","${data.vendor || ''}","${data.date || ''}","${data.total || ''}","${data.subtotal || ''}","${data.tax || ''}"\n`;
+            return headers + row;
+        }
+
+        function printInvoice() {
+            if (!currentInvoiceData) {
+                showAlert('No invoice to print. Please upload an invoice first.', 'error');
+                return;
+            }
+            window.print();
+        }
+
+        function resetUpload() {
+            document.getElementById('preview-section').style.display = 'none';
+            document.getElementById('file-input').value = '';
+            currentInvoiceData = null;
+            currentInvoiceId = null;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
