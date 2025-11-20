@@ -1479,6 +1479,13 @@ def send_single_invoice_email():
         tax = invoice_data.get('tax', '0')
         line_items = invoice_data.get('line_items', [])
         
+        # Ensure line_items is a list, not a JSON string
+        if isinstance(line_items, str):
+            try:
+                line_items = json.loads(line_items)
+            except:
+                line_items = []
+        
         # Build line items HTML
         line_items_html = ''
         if line_items and isinstance(line_items, list):
@@ -1678,7 +1685,7 @@ def send_email_report():
             recent_invoices = []
             
             for inv in invoices:
-                vendors.append(inv.get('vendor_name', 'Unknown'))
+                vendors.append(inv.get('vendor', inv.get('vendor_name', 'Unknown')))
                 
                 if inv.get('total'):
                     try:
@@ -1722,7 +1729,7 @@ def send_email_report():
             recent_html = ''
             for inv in recent_invoices:
                 inv_num = inv.get('invoice_number', 'N/A')
-                vendor = inv.get('vendor_name', 'N/A')
+                vendor = inv.get('vendor', inv.get('vendor_name', 'N/A'))
                 total = inv.get('total', 'N/A')
                 date = inv.get('date', 'N/A')
                 recent_html += f'<tr><td style="padding: 10px; border-bottom: 1px solid #eee;">{inv_num}</td><td style="padding: 10px; border-bottom: 1px solid #eee;">{vendor}</td><td style="padding: 10px; border-bottom: 1px solid #eee;">{date}</td><td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">{total}</td></tr>'
