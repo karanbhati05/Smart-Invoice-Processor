@@ -398,8 +398,7 @@ def process_invoice_v2():
         if should_save:
             # If saving from single page, mark as 'single' upload type
             upload_type = request.form.get('upload_type', 'single')
-            save_result = db.save_invoice(result, user_id, file_hash, upload_type=upload_type)
-            invoice_id = save_result.get('invoice_id') if save_result.get('success') else None
+            invoice_id = db.save_invoice(result, user_id, file_hash, upload_type=upload_type)
         
         # Determine extraction method
         ai_used = result.get('_ai_used', False)
@@ -468,10 +467,9 @@ def process_batch_invoices():
                 try:
                     # Create file hash from filename (as we don't have original file data here)
                     file_hash = db.calculate_file_hash(item['filename'].encode())
-                    save_result = db.save_invoice(item['data'], user_id, file_hash, upload_type='batch')
-                    if save_result.get('success'):
-                        item['invoice_id'] = save_result.get('invoice_id')
-                        item['invoice'] = item['data']  # Add full invoice data for display
+                    invoice_id = db.save_invoice(item['data'], user_id, file_hash, upload_type='batch')
+                    item['invoice_id'] = invoice_id
+                    item['invoice'] = item['data']  # Add full invoice data for display
                 except Exception as e:
                     print(f"Error saving invoice {item['filename']}: {e}")
                     # Continue even if save fails
