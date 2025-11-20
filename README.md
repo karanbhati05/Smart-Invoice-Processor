@@ -2,7 +2,7 @@
 
 > AI-powered invoice processing web application with Google OAuth authentication, batch processing, and professional email reports
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/smart-invoice-processor)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/karanbhati05/Smart-Invoice-Processor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
 ![Flask](https://img.shields.io/badge/flask-2.3+-green.svg)
@@ -72,8 +72,8 @@ smart-invoice-processor/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/smart-invoice-processor.git
-cd smart-invoice-processor
+git clone https://github.com/karanbhati05/Smart-Invoice-Processor.git
+cd Smart-Invoice-Processor
 ```
 
 ### 2. Install dependencies

@@ -6,8 +6,8 @@ Get the Smart Invoice Processor running in 5 minutes!
 
 ### 1. Clone & Install
 ```bash
-git clone https://github.com/yourusername/smart-invoice-processor.git
-cd smart-invoice-processor
+git clone https://github.com/karanbhati05/Smart-Invoice-Processor.git
+cd Smart-Invoice-Processor
 pip install -r requirements.txt
 ```
 

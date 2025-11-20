@@ -134,7 +134,7 @@ The repository is now:
 
 2. **Add Remote and Push**
    ```bash
-   git remote add origin https://github.com/yourusername/smart-invoice-processor.git
+   git remote add origin https://github.com/karanbhati05/Smart-Invoice-Processor.git
    git branch -M main
    git push -u origin main
    ```
