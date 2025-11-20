@@ -269,9 +269,156 @@ def process_batch(files, api_key, extract_fn, max_workers=3):
     return {'results': results}
 
 class ExportManager:
-    def export_json(self, data): return json.dumps(data, indent=2)
-    def export_csv(self, data): return ""
-    def export_pdf(self, data): return b""
+    def export(self, invoices, format='json'):
+        """Export invoices in specified format"""
+        if format == 'json':
+            return self.export_json(invoices)
+        elif format == 'csv':
+            return self.export_csv(invoices)
+        elif format == 'pdf':
+            return self.export_pdf(invoices)
+        else:
+            raise ValueError(f"Unsupported export format: {format}")
+    
+    def export_json(self, invoices):
+        """Export as JSON"""
+        data = json.dumps(invoices, indent=2, default=str)
+        return data, 'application/json', 'invoices.json'
+    
+    def export_csv(self, invoices):
+        """Export as CSV"""
+        import io
+        import csv
+        
+        output = io.StringIO()
+        
+        # Define CSV columns
+        fieldnames = ['id', 'invoice_number', 'vendor', 'date', 'total', 'subtotal', 'tax', 'summary', 'status', 'created_at']
+        writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction='ignore')
+        
+        writer.writeheader()
+        for invoice in invoices:
+            # Flatten the invoice data for CSV
+            row = {
+                'id': invoice.get('id'),
+                'invoice_number': invoice.get('invoice_number'),
+                'vendor': invoice.get('vendor'),
+                'date': invoice.get('date'),
+                'total': invoice.get('total'),
+                'subtotal': invoice.get('subtotal'),
+                'tax': invoice.get('tax'),
+                'summary': invoice.get('summary'),
+                'status': invoice.get('status'),
+                'created_at': invoice.get('created_at')
+            }
+            writer.writerow(row)
+        
+        return output.getvalue(), 'text/csv', 'invoices.csv'
+    
+    def export_pdf(self, invoices):
+        """Export as PDF - Basic text-based PDF"""
+        try:
+            from reportlab.lib.pagesizes import letter
+            from reportlab.lib import colors
+            from reportlab.lib.units import inch
+            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+            from reportlab.lib.styles import getSampleStyleSheet
+            import io
+            
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=letter)
+            elements = []
+            styles = getSampleStyleSheet()
+            
+            # Title
+            elements.append(Paragraph("Invoice Export Report", styles['Title']))
+            elements.append(Spacer(1, 0.3*inch))
+            
+            # Create table data
+            data = [['ID', 'Vendor', 'Date', 'Total', 'Status']]
+            for inv in invoices[:50]:  # Limit to 50 invoices for PDF
+                data.append([
+                    str(inv.get('id', '')),
+                    str(inv.get('vendor', ''))[:30],
+                    str(inv.get('date', '')),
+                    str(inv.get('total', '')),
+                    str(inv.get('status', ''))
+                ])
+            
+            # Create table
+            t = Table(data)
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ]))
+            
+            elements.append(t)
+            doc.build(elements)
+            
+            return buffer.getvalue(), 'application/pdf', 'invoices.pdf'
+        except ImportError:
+            # If reportlab is not installed, return a simple text-based "PDF"
+            text = "INVOICE EXPORT REPORT\n\n"
+            text += "=" * 80 + "\n\n"
+            for inv in invoices[:50]:
+                text += f"ID: {inv.get('id')}\n"
+                text += f"Vendor: {inv.get('vendor')}\n"
+                text += f"Date: {inv.get('date')}\n"
+                text += f"Total: {inv.get('total')}\n"
+                text += f"Status: {inv.get('status')}\n"
+                text += "-" * 80 + "\n\n"
+            
+            return text.encode('utf-8'), 'text/plain', 'invoices.txt'
+
+    def export_analytics(self, analytics, format='json'):
+        """Export analytics data"""
+        if format == 'csv':
+            import io
+            import csv
+            
+            output = io.StringIO()
+            writer = csv.writer(output)
+            
+            # Write summary stats
+            writer.writerow(['Analytics Summary'])
+            writer.writerow(['Total Invoices', analytics.get('total_invoices', 0)])
+            writer.writerow(['Total Amount', analytics.get('total_amount', 0)])
+            writer.writerow(['Average Amount', analytics.get('average_amount', 0)])
+            writer.writerow([])
+            
+            # Write top vendors
+            writer.writerow(['Top Vendors'])
+            writer.writerow(['Vendor', 'Count', 'Total Amount'])
+            for vendor in analytics.get('top_vendors', []):
+                writer.writerow([vendor.get('vendor'), vendor.get('count'), vendor.get('total')])
+            
+            writer.writerow([])
+            
+            # Write recent invoices
+            writer.writerow(['Recent Invoices'])
+            writer.writerow(['ID', 'Vendor', 'Date', 'Total', 'Status'])
+            for inv in analytics.get('recent_invoices', []):
+                writer.writerow([
+                    inv.get('id'),
+                    inv.get('vendor'),
+                    inv.get('date'),
+                    inv.get('total'),
+                    inv.get('status')
+                ])
+            
+            return output.getvalue(), 'text/csv', 'analytics.csv'
+        else:
+            # JSON format
+            data = json.dumps(analytics, indent=2, default=str)
+            return data, 'application/json', 'analytics.json'
+
+
 
 class UserManager:
     def __init__(self, db=None):
