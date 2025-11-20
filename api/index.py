@@ -22,20 +22,49 @@ from processor import extract_invoice_data
 
 # Placeholder classes for removed modules
 class InvoiceDatabase:
-    def __init__(self): pass
+    def __init__(self): 
+        self.invoices = {}
+        self.users = {}
+    
     def save_invoice(self, *args, **kwargs): return 1
     def get_all_invoices(self, *args, **kwargs): return []
     def get_invoice(self, *args, **kwargs): return None
     def update_status(self, *args, **kwargs): return True
     def get_stats(self, *args, **kwargs): return {'total': 0, 'pending': 0}
     def clear_all(self, *args, **kwargs): return True
+    def get_user_by_email(self, email):
+        """Get user by email"""
+        return self.users.get(email)
 
 def require_auth(f): return f
 def optional_auth(f): return f
 def create_demo_user(): return {'token': 'demo', 'user_id': '1'}
 
 class AuthManager:
-    def verify_token(self, token): return {'user_id': '1', 'email': 'demo@example.com'}
+    def __init__(self):
+        import jwt
+        import datetime
+        self.jwt = jwt
+        self.datetime = datetime
+        self.secret = os.environ.get('JWT_SECRET', 'default-secret-key-change-in-production')
+    
+    def generate_token(self, user_id, email):
+        """Generate a JWT token for the user"""
+        payload = {
+            'user_id': str(user_id),
+            'email': email,
+            'exp': self.datetime.datetime.utcnow() + self.datetime.timedelta(days=30)
+        }
+        token = self.jwt.encode(payload, self.secret, algorithm='HS256')
+        return token
+    
+    def verify_token(self, token):
+        """Verify and decode JWT token"""
+        try:
+            payload = self.jwt.decode(token, self.secret, algorithms=['HS256'])
+            return payload
+        except:
+            return None
 
 auth_manager = AuthManager()
 
