@@ -131,8 +131,14 @@ Important:
         print(f"❌ Gemini Vision API Error ({response.status_code}): {error_text}")
         raise Exception(f"Gemini Vision API returned status {response.status_code}: {error_text}")
     
-    result = response.json()
-    print(f"📥 Received response from Gemini")
+    try:
+        result = response.json()
+        print(f"📥 Received response from Gemini - Type: {type(result)}")
+        print(f"🔍 Response structure: {str(result)[:500]}")
+    except Exception as e:
+        print(f"❌ Failed to parse JSON response: {e}")
+        print(f"Raw response text: {response.text[:1000]}")
+        raise Exception(f"Failed to parse Gemini response as JSON: {e}")
     
     # Check if result is a list instead of dict (error case)
     if isinstance(result, list):
