@@ -101,7 +101,17 @@ class InvoiceDatabase:
         params.extend([limit, offset])
         cursor.execute(query, params)
         rows = cursor.fetchall()
-        return [dict(row) for row in rows]
+        invoices = []
+        for row in rows:
+            invoice = dict(row)
+            # Parse line_items JSON string back to list
+            if invoice.get('line_items'):
+                try:
+                    invoice['line_items'] = json.loads(invoice['line_items'])
+                except:
+                    invoice['line_items'] = []
+            invoices.append(invoice)
+        return invoices
     
     def search_invoices(self, search_term, user_id=None):
         cursor = self.conn.cursor()
@@ -112,13 +122,32 @@ class InvoiceDatabase:
             params.append(user_id)
         cursor.execute(query, params)
         rows = cursor.fetchall()
-        return [dict(row) for row in rows]
+        invoices = []
+        for row in rows:
+            invoice = dict(row)
+            # Parse line_items JSON string back to list
+            if invoice.get('line_items'):
+                try:
+                    invoice['line_items'] = json.loads(invoice['line_items'])
+                except:
+                    invoice['line_items'] = []
+            invoices.append(invoice)
+        return invoices
     
     def get_invoice(self, invoice_id):
         cursor = self.conn.cursor()
         cursor.execute('SELECT * FROM invoices WHERE id = ?', (invoice_id,))
         row = cursor.fetchone()
-        return dict(row) if row else None
+        if row:
+            invoice = dict(row)
+            # Parse line_items JSON string back to list
+            if invoice.get('line_items'):
+                try:
+                    invoice['line_items'] = json.loads(invoice['line_items'])
+                except:
+                    invoice['line_items'] = []
+            return invoice
+        return None
     
     def update_invoice_status(self, invoice_id, status, user_id=None):
         cursor = self.conn.cursor()
