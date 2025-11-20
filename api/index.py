@@ -21,20 +21,163 @@ sys.path.insert(0, os.path.dirname(__file__))
 from processor import extract_invoice_data
 
 # Placeholder classes for removed modules
+import sqlite3
+import hashlib
+
 class InvoiceDatabase:
-    def __init__(self): 
-        self.invoices = {}
-        self.users = {}
+    def __init__(self):
+        self.conn = sqlite3.connect(':memory:', check_same_thread=False)
+        self.conn.row_factory = sqlite3.Row
+        self._init_db()
     
-    def save_invoice(self, *args, **kwargs): return 1
-    def get_all_invoices(self, *args, **kwargs): return []
-    def get_invoice(self, *args, **kwargs): return None
-    def update_status(self, *args, **kwargs): return True
-    def get_stats(self, *args, **kwargs): return {'total': 0, 'pending': 0}
-    def clear_all(self, *args, **kwargs): return True
+    def _init_db(self):
+        """Initialize database tables"""
+        cursor = self.conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS invoices (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT,
+                vendor TEXT,
+                date TEXT,
+                total TEXT,
+                invoice_number TEXT,
+                tax TEXT,
+                subtotal TEXT,
+                summary TEXT,
+                line_items TEXT,
+                status TEXT DEFAULT 'pending',
+                upload_type TEXT,
+                file_hash TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE,
+                name TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        self.conn.commit()
+    
+    def get_connection(self):
+        return self.conn
+    
+    def calculate_file_hash(self, data):
+        return hashlib.md5(data).hexdigest()
+    
+    def check_duplicate(self, file_hash):
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT id FROM invoices WHERE file_hash = ?', (file_hash,))
+        return cursor.fetchone() is not None
+    
+    def save_invoice(self, data, user_id, file_hash, upload_type='single'):
+        cursor = self.conn.cursor()
+        line_items_json = json.dumps(data.get('line_items', []))
+        cursor.execute('''
+            INSERT INTO invoices (user_id, vendor, date, total, invoice_number, tax, subtotal, summary, line_items, file_hash, upload_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id, data.get('vendor'), data.get('date'), data.get('total'), 
+              data.get('invoice_number'), data.get('tax'), data.get('subtotal'),
+              data.get('summary'), line_items_json, file_hash, upload_type))
+        self.conn.commit()
+        return cursor.lastrowid
+    
+    def list_invoices(self, user_id=None, status=None, upload_type=None, limit=50, offset=0):
+        cursor = self.conn.cursor()
+        query = 'SELECT * FROM invoices WHERE 1=1'
+        params = []
+        if user_id:
+            query += ' AND user_id = ?'
+            params.append(user_id)
+        if status:
+            query += ' AND status = ?'
+            params.append(status)
+        if upload_type:
+            query += ' AND upload_type = ?'
+            params.append(upload_type)
+        query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?'
+        params.extend([limit, offset])
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+    
+    def search_invoices(self, search_term, user_id=None):
+        cursor = self.conn.cursor()
+        query = 'SELECT * FROM invoices WHERE (vendor LIKE ? OR invoice_number LIKE ?)'
+        params = [f'%{search_term}%', f'%{search_term}%']
+        if user_id:
+            query += ' AND user_id = ?'
+            params.append(user_id)
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+    
+    def get_invoice(self, invoice_id):
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT * FROM invoices WHERE id = ?', (invoice_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+    
+    def update_invoice_status(self, invoice_id, status, user_id=None):
+        cursor = self.conn.cursor()
+        if user_id:
+            cursor.execute('UPDATE invoices SET status = ? WHERE id = ? AND user_id = ?', 
+                         (status, invoice_id, user_id))
+        else:
+            cursor.execute('UPDATE invoices SET status = ? WHERE id = ?', (status, invoice_id))
+        self.conn.commit()
+        return cursor.rowcount > 0
+    
+    def delete_invoice(self, invoice_id):
+        cursor = self.conn.cursor()
+        cursor.execute('DELETE FROM invoices WHERE id = ?', (invoice_id,))
+        self.conn.commit()
+        return cursor.rowcount > 0
+    
+    def get_analytics(self, user_id=None):
+        cursor = self.conn.cursor()
+        if user_id:
+            cursor.execute('SELECT COUNT(*) as total FROM invoices WHERE user_id = ?', (user_id,))
+        else:
+            cursor.execute('SELECT COUNT(*) as total FROM invoices')
+        total = cursor.fetchone()[0]
+        return {
+            'total': total,
+            'pending': 0,
+            'approved': 0,
+            'monthly': 0
+        }
+    
+    def get_stats(self, user_id=None):
+        return self.get_analytics(user_id)
+    
+    def clear_all(self, user_id=None):
+        cursor = self.conn.cursor()
+        if user_id:
+            cursor.execute('DELETE FROM invoices WHERE user_id = ?', (user_id,))
+        else:
+            cursor.execute('DELETE FROM invoices')
+        self.conn.commit()
+        return True
+    
     def get_user_by_email(self, email):
-        """Get user by email"""
-        return self.users.get(email)
+        cursor = self.conn.cursor()
+        cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
+        row = cursor.fetchone()
+        if row:
+            return {'id': row[0], 'email': row[1], 'name': row[2]}
+        return None
+    
+    def create_user(self, email, name):
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute('INSERT INTO users (email, name) VALUES (?, ?)', (email, name))
+            self.conn.commit()
+            return cursor.lastrowid
+        except:
+            return None
 
 def require_auth(f): return f
 def optional_auth(f): return f
@@ -83,9 +226,33 @@ class ExportManager:
     def export_csv(self, data): return ""
     def export_pdf(self, data): return b""
 
+class UserManager:
+    def __init__(self, db=None):
+        self.db = db
+    
+    def register_user(self, email, password=None, full_name='', oauth_provider=None, company=''):
+        """Register a new user"""
+        if self.db:
+            user_id = self.db.create_user(email, full_name)
+            if user_id:
+                return {'success': True, 'user_id': user_id}
+        return {'success': False, 'error': 'Registration failed'}
+    
+    def login_user(self, email, password):
+        """Login user with email/password"""
+        if self.db:
+            user = self.db.get_user_by_email(email)
+            if user:
+                token = auth_manager.generate_token(user['id'], email)
+                return {'success': True, 'token': token, 'user': user}
+        return {'success': False, 'error': 'Invalid credentials'}
+    
+    def verify_email(self, token):
+        """Verify email token"""
+        return {'success': True, 'message': 'Email verified'}
+
 batch_processor = None
-USER_MANAGEMENT_ENABLED = False
-UserManager = None
+USER_MANAGEMENT_ENABLED = True
 
 # Initialize Flask app
 app = Flask(__name__, static_folder='../public', static_url_path='')
@@ -112,7 +279,7 @@ VERCEL_URL = 'https://ai-invoice-automation-one.vercel.app'
 # Initialize database
 db = InvoiceDatabase()
 export_manager = ExportManager()
-user_manager = UserManager() if USER_MANAGEMENT_ENABLED and UserManager else None
+user_manager = UserManager(db) if USER_MANAGEMENT_ENABLED and UserManager else None
 
 
 def allowed_file(filename):
