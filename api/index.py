@@ -345,8 +345,10 @@ class ExportManager:
                     str(inv.get('status', ''))
                 ])
             
-            # Create table
-            t = Table(data)
+            # Create table with column widths optimized for letter size (8.5" x 11")
+            # Available width is ~7.5" (letter width minus margins)
+            col_widths = [0.6*inch, 2.5*inch, 1.2*inch, 1.2*inch, 1.0*inch]  # Total: 6.5"
+            t = Table(data, colWidths=col_widths)
             t.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
@@ -355,7 +357,9 @@ class ExportManager:
                 ('FONTSIZE', (0, 0), (-1, 0), 10),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
                 ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('WORDWRAP', (0, 0), (-1, -1), True)
             ]))
             
             elements.append(t)
