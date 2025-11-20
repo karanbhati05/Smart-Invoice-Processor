@@ -1227,7 +1227,7 @@ def send_single_invoice_email():
         
         # Extract invoice details
         inv_number = invoice_data.get('invoice_number', 'N/A')
-        vendor = invoice_data.get('vendor_name', 'N/A')
+        vendor = invoice_data.get('vendor', invoice_data.get('vendor_name', 'N/A'))
         date = invoice_data.get('date', 'N/A')
         total = invoice_data.get('total', '0')
         subtotal = invoice_data.get('subtotal', '0')
