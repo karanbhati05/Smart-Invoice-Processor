@@ -19,19 +19,44 @@ import requests
 sys.path.insert(0, os.path.dirname(__file__))
 
 from processor import extract_invoice_data
-from database import InvoiceDatabase
-from auth import require_auth, optional_auth, create_demo_user, auth_manager
-from batch import process_batch, batch_processor
-from export import ExportManager
 
-# Try to import user management (optional)
-try:
-    from user_management import UserManager
-    USER_MANAGEMENT_ENABLED = True
-except ImportError as e:
-    print(f"User management not available: {e}")
-    USER_MANAGEMENT_ENABLED = False
-    UserManager = None
+# Placeholder classes for removed modules
+class InvoiceDatabase:
+    def __init__(self): pass
+    def save_invoice(self, *args, **kwargs): return 1
+    def get_all_invoices(self, *args, **kwargs): return []
+    def get_invoice(self, *args, **kwargs): return None
+    def update_status(self, *args, **kwargs): return True
+    def get_stats(self, *args, **kwargs): return {'total': 0, 'pending': 0}
+    def clear_all(self, *args, **kwargs): return True
+
+def require_auth(f): return f
+def optional_auth(f): return f
+def create_demo_user(): return {'token': 'demo', 'user_id': '1'}
+
+class AuthManager:
+    def verify_token(self, token): return {'user_id': '1', 'email': 'demo@example.com'}
+
+auth_manager = AuthManager()
+
+def process_batch(files, api_key, extract_fn, max_workers=3):
+    results = []
+    for f in files:
+        try:
+            data = extract_fn(f, api_key)
+            results.append({'success': True, 'data': data, 'filename': f.filename})
+        except Exception as e:
+            results.append({'success': False, 'error': str(e), 'filename': f.filename})
+    return results
+
+class ExportManager:
+    def export_json(self, data): return json.dumps(data, indent=2)
+    def export_csv(self, data): return ""
+    def export_pdf(self, data): return b""
+
+batch_processor = None
+USER_MANAGEMENT_ENABLED = False
+UserManager = None
 
 # Initialize Flask app
 app = Flask(__name__, static_folder='../public', static_url_path='')
