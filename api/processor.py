@@ -134,9 +134,19 @@ Important:
     result = response.json()
     print(f"📥 Received response from Gemini")
     
+    # Check if result is a list instead of dict (error case)
+    if isinstance(result, list):
+        print(f"❌ Gemini returned a list instead of dict: {result}")
+        raise Exception(f"Unexpected response format from Gemini API: {result}")
+    
     # Extract and parse the response
     if 'candidates' in result and len(result['candidates']) > 0:
-        generated_text = result['candidates'][0]['content']['parts'][0]['text']
+        candidate = result['candidates'][0]
+        if 'content' not in candidate or 'parts' not in candidate['content']:
+            print(f"❌ Invalid candidate structure: {candidate}")
+            raise Exception(f"Invalid response structure from Gemini API")
+        
+        generated_text = candidate['content']['parts'][0]['text']
         print(f"📄 Generated text length: {len(generated_text)} chars")
         
         # Clean up markdown formatting
