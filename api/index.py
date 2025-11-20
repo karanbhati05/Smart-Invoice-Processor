@@ -241,14 +241,32 @@ class AuthManager:
 auth_manager = AuthManager()
 
 def process_batch(files, api_key, extract_fn, max_workers=3):
+    import tempfile
+    from werkzeug.utils import secure_filename
+    
     results = []
     for f in files:
+        temp_path = None
         try:
-            data = extract_fn(f, api_key)
+            # Save to temp file
+            filename = secure_filename(f.filename)
+            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(filename)[1]) as temp_file:
+                temp_path = temp_file.name
+                f.save(temp_path)
+            
+            # Extract data from temp file path
+            data = extract_fn(temp_path, None, api_key)
             results.append({'success': True, 'data': data, 'filename': f.filename})
         except Exception as e:
             results.append({'success': False, 'error': str(e), 'filename': f.filename})
-    return results
+        finally:
+            # Clean up temp file
+            if temp_path:
+                try:
+                    os.unlink(temp_path)
+                except:
+                    pass
+    return {'results': results}
 
 class ExportManager:
     def export_json(self, data): return json.dumps(data, indent=2)
