@@ -152,7 +152,17 @@ Important:
             print(f"❌ Invalid candidate structure: {candidate}")
             raise Exception(f"Invalid response structure from Gemini API")
         
-        generated_text = candidate['content']['parts'][0]['text']
+        parts = candidate['content']['parts']
+        if not isinstance(parts, list) or len(parts) == 0:
+            print(f"❌ Parts is not a list or is empty: {parts}")
+            raise Exception(f"Invalid parts structure from Gemini API")
+        
+        first_part = parts[0]
+        if not isinstance(first_part, dict) or 'text' not in first_part:
+            print(f"❌ First part is not a dict or has no text: {first_part}")
+            raise Exception(f"Invalid part structure from Gemini API")
+        
+        generated_text = first_part['text']
         print(f"📄 Generated text length: {len(generated_text)} chars")
         
         # Clean up markdown formatting
