@@ -991,6 +991,7 @@ def health_check_v2():
 
 
 @app.route('/api/v2/reset-database', methods=['POST'])
+@optional_auth
 def reset_database():
     """
     POST /api/v2/reset-database - Clear invoice data, optionally filtered by upload_type
@@ -998,36 +999,44 @@ def reset_database():
     Query params:
         - upload_type: Filter deletion by upload type (single/batch)
     
+    Headers:
+        - Authorization: Bearer <token> (optional)
+    
     Returns:
         Success message
     """
     try:
         upload_type = request.args.get('upload_type')
+        user_id = getattr(request, 'user_id', None)
         conn = db.get_connection()
         cursor = conn.cursor()
         
         if upload_type:
-            # Clear only invoices of specified type
-            cursor.execute('SELECT id FROM invoices WHERE upload_type = ?', (upload_type,))
+            # Clear only invoices of specified type for this user
+            if user_id:
+                cursor.execute('SELECT id FROM invoices WHERE upload_type = ? AND user_id = ?', (upload_type, user_id))
+            else:
+                cursor.execute('SELECT id FROM invoices WHERE upload_type = ?', (upload_type,))
+            
             invoice_ids = [row[0] for row in cursor.fetchall()]
             
             if invoice_ids:
                 placeholders = ','.join('?' * len(invoice_ids))
-                cursor.execute(f'DELETE FROM processing_history WHERE invoice_id IN ({placeholders})', invoice_ids)
-                cursor.execute(f'DELETE FROM line_items WHERE invoice_id IN ({placeholders})', invoice_ids)
                 cursor.execute(f'DELETE FROM invoices WHERE id IN ({placeholders})', invoice_ids)
             
             message = f'{len(invoice_ids)} {upload_type} invoices cleared successfully'
         else:
-            # Clear all invoices
-            cursor.execute('DELETE FROM processing_history')
-            cursor.execute('DELETE FROM line_items')
-            cursor.execute('DELETE FROM invoices')
-            cursor.execute('DELETE FROM vendors')
-            message = 'All invoices cleared successfully'
+            # Clear all invoices for this user (or all if no user_id)
+            if user_id:
+                cursor.execute('DELETE FROM invoices WHERE user_id = ?', (user_id,))
+                deleted = cursor.rowcount
+                message = f'{deleted} invoices cleared successfully'
+            else:
+                cursor.execute('DELETE FROM invoices')
+                deleted = cursor.rowcount
+                message = f'{deleted} invoices cleared successfully'
         
         conn.commit()
-        conn.close()
         
         return jsonify({
             'success': True,
