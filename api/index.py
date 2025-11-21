@@ -72,15 +72,15 @@ class InvoiceDatabase:
         cursor.execute('SELECT id FROM invoices WHERE file_hash = ?', (file_hash,))
         return cursor.fetchone() is not None
     
-    def save_invoice(self, data, user_id, file_hash, upload_type='single'):
+    def save_invoice(self, data, user_id, file_hash, upload_type='single', status='processed'):
         cursor = self.conn.cursor()
         line_items_json = json.dumps(data.get('line_items', []))
         cursor.execute('''
-            INSERT INTO invoices (user_id, vendor, date, total, invoice_number, tax, subtotal, summary, line_items, file_hash, upload_type)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO invoices (user_id, vendor, date, total, invoice_number, tax, subtotal, summary, line_items, file_hash, upload_type, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (user_id, data.get('vendor'), data.get('date'), data.get('total'), 
               data.get('invoice_number'), data.get('tax'), data.get('subtotal'),
-              data.get('summary'), line_items_json, file_hash, upload_type))
+              data.get('summary'), line_items_json, file_hash, upload_type, status))
         self.conn.commit()
         return cursor.lastrowid
     
